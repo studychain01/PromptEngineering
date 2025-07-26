@@ -66,7 +66,7 @@ now we got correct answer
 
 ## Zero-Shot Chain-of-Thought
 
-One recent idea that came out more recently is the idea of zero-shot CoT (Kojima et al. 2022) that essentially involves adding "Let's think step by step" to the original prompt. Let's try a simple problem and see how the model performs:
+Adding "Let's think step by step" to the end of original prompt. Let's try a simple problem and see how the model performs:
 
 ### Example: Apple Problem
 
@@ -145,5 +145,122 @@ The Auto-CoT process can be visualized as follows:
 
 This automated approach eliminates the need for manual hand-crafting of effective demonstrations while maintaining the benefits of Chain-of-Thought prompting.
 
+## Self-Consistency
 
+Self-Consistency uses few-shot CoT with diverse examples, and uses generations to select the most consistent answer. This helps to boost the performance of CoT prompting on tasks involving arithmetic and commonsense reasoning.
+
+### Example: Age Problem
+
+**Prompt:**
+```
+When I was 6 my sister was half my age. Now I'm 70 how old is my sister?
+```
+
+**Output:**
+```
+35
+```
+
+The output is wrong! How may we improve this with self-consistency? Let's try it out. We will use the few-shot exemplars from Wang et al. 2022 (Table 17):
+
+**Prompt:**
+```
+Q: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today?
+A: We start with 15 trees. Later we have 21 trees. The difference must be the number of trees they planted. So, they must have planted 21 - 15 = 6 trees. The answer is 6.
+
+Q: If there are 3 cars in the parking lot and 2 more cars arrive, how many cars are in the parking lot?
+A: There are 3 cars in the parking lot already. 2 more arrive. Now there are 3 + 2 = 5 cars. The answer is 5.
+
+Q: Leah had 32 chocolates and her sister had 42. If they ate 35, how many pieces do they have left in total?
+A: Leah had 32 chocolates and Leah's sister had 42. That means there were originally 32 + 42 = 74 chocolates. 35 have been eaten. So in total they still have 74 - 35 = 39 chocolates. The answer is 39.
+
+Q: Jason had 20 lollipops. He gave Denny some lollipops. Now Jason has 12 lollipops. How many lollipops did Jason give to Denny?
+A: Jason had 20 lollipops. Since he only has 12 now, he must have given the rest to Denny. The number of lollipops he has given to Denny must have been 20 - 12 = 8 lollipops. The answer is 8.
+
+Q: Shawn has five toys. For Christmas, he got two toys each from his mom and dad. How many toys does he have now?
+A: He has 5 toys. He got 2 from mom, so after that he has 5 + 2 = 7 toys. Then he got 2 more from dad, so in total he has 7 + 2 = 9 toys. The answer is 9.
+
+Q: There were nine computers in the server room. Five more computers were installed each day, from monday to thursday. How many computers are now in the server room?
+A: There are 4 days from monday to thursday. 5 computers were added each day. That means in total 4 * 5 = 20 computers were added. There were 9 computers in the beginning, so now there are 9 + 20 = 29 computers. The answer is 29.
+
+Q: Michael had 58 golf balls. On tuesday, he lost 23 golf balls. On wednesday, he lost 2 more. How many golf balls did he have at the end of wednesday?
+A: Michael initially had 58 balls. He lost 23 on Tuesday, so after that he has 58 - 23 = 35 balls. On Wednesday he lost 2 more so now he has 35 - 2 = 33 balls. The answer is 33.
+
+Q: Olivia has $23. She bought five bagels for $3 each. How much money does she have left?
+A: She bought 5 bagels for $3 each. This means she spent $15. She has $8 left.
+
+Q: When I was 6 my sister was half my age. Now I'm 70 how old is my sister?
+A:
+```
+
+**Output 1:**
+```
+When I was 6 my sister was half my age, so she was 3. Now I am 70, so she is 70 - 3 = 67. The answer is 67.
+```
+
+## Prompt Chaining
+
+Prompt chaining is a technique that breaks complex tasks into smaller, manageable steps and runs multiple prompts sequentially, where each prompt uses the output of the previous step as input.
+
+### How It Works
+
+🧠 **Concept**: It's like building a chain of prompts, where each link moves the AI closer to the final result.
+
+Think of it like a multi-step recipe:
+```
+Step 1 → Step 2 → Step 3... → Final Output
+```
+
+### Example: Writing a Poem About Einstein
+
+🎯 **Goal**: Write a poem about Albert Einstein's achievements.
+
+Instead of doing it all in one prompt, we break it into smaller prompts:
+
+#### 🔗 Step 1: Gather Facts
+
+**Prompt 1:**
+```
+"List 3 major achievements of Albert Einstein."
+```
+
+**Output 1:**
+```
+Theory of relativity
+Nobel Prize for the photoelectric effect
+E=mc²
+```
+
+#### 🔗 Step 2: Create Poetic Outline
+
+**Prompt 2:**
+```
+"Write a short poetic outline based on these facts: Theory of relativity, Nobel Prize, E=mc²"
+```
+
+**Output 2:**
+```
+A verse about time and space
+A verse about the Nobel Prize
+A verse about mass-energy equivalence
+```
+
+#### 🔗 Step 3: Write the Final Poem
+
+**Prompt 3:**
+```
+"Write a 3-stanza poem using this outline: [Insert Output 2]"
+```
+
+**Output 3:**
+```
+(Generates the final poem)
+```
+
+### 💡 Benefits of Prompt Chaining
+
+- **Complex Task Management**: Helps with complex tasks like coding, summarizing, or writing essays
+- **Focused Control**: Keeps each step focused and controllable
+- **Error Reduction**: Reduces errors and improves accuracy
+- **Easy Debugging**: Easier to debug if something goes wrong
 
