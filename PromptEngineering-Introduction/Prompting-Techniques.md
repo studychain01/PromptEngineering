@@ -264,3 +264,231 @@ A verse about mass-energy equivalence
 - **Error Reduction**: Reduces errors and improves accuracy
 - **Easy Debugging**: Easier to debug if something goes wrong
 
+## Tree of Thoughts (ToT)
+
+For complex tasks that require exploration or strategic lookahead, traditional or simple prompting techniques fall short. Yao et al. (2023) and Long (2023) recently proposed Tree of Thoughts (ToT), a framework that generalizes over chain-of-thought prompting and encourages exploration over thoughts that serve as intermediate steps for general problem solving with language models.
+
+### How Tree of Thoughts Works
+
+ToT maintains a tree of thoughts, where thoughts represent coherent language sequences that serve as intermediate steps toward solving a problem. This approach enables an LM to self-evaluate the progress through intermediate thoughts made towards solving a problem through a deliberate reasoning process. The LM's ability to generate and evaluate thoughts is then combined with search algorithms (e.g., breadth-first search and depth-first search) to enable systematic exploration of thoughts with lookahead and backtracking.
+
+### Key Components
+
+When using ToT, different tasks require defining the number of candidates and the number of thoughts/steps. For instance, as demonstrated in the paper, Game of 24 is used as a mathematical reasoning task which requires decomposing the thoughts into 3 steps, each involving an intermediate equation. At each step, the best b=5 candidates are kept.
+
+### Example: Game of 24
+
+To perform BFS in ToT for the Game of 24 task, the LM is prompted to evaluate each thought candidate as "sure/maybe/impossible" with regard to reaching 24. As stated by the authors, "the aim is to promote correct partial solutions that can be verified within few lookahead trials, and eliminate impossible partial solutions based on 'too big/small' commonsense, and keep the rest 'maybe'". Values are sampled 3 times for each thought.
+
+### Multi-Expert Collaboration Approach
+
+Tree of Thoughts can also be implemented through collaborative expert reasoning, where multiple AI experts work together to solve complex problems:
+
+#### Expert Collaboration Framework
+
+**Core Concept**: Three experts with exceptional logical thinking skills collaboratively answer a question using the tree of thoughts method. Each expert shares their thought process in detail, taking into account the previous thoughts of others and admitting any errors. They iteratively refine and expand upon each other's ideas, giving credit where it's due. The process continues until a conclusive answer is found.
+
+#### Implementation Guidelines
+
+- **Step-by-Step Reasoning**: Each expert writes down one step of their thinking, then shares it with the group
+- **Iterative Refinement**: Experts go on to the next step, building upon previous insights
+- **Error Recognition**: If any expert realizes they're wrong at any point, they acknowledge it and withdraw
+- **Collaborative Building**: Experts refine and expand upon each other's ideas, acknowledging contributions
+- **Structured Output**: The entire response is organized in a markdown table format for clarity
+
+#### Example Prompt Structure
+
+```
+Three experts with exceptional logical thinking skills are collaboratively answering a question using the tree of thoughts method. Each expert will share their thought process in detail, taking into account the previous thoughts of others and admitting any errors. They will iteratively refine and expand upon each other's ideas, giving credit where it's due. The process continues until a conclusive answer is found. Organize the entire response in a markdown table format. The task is: [YOUR QUESTION HERE]
+```
+
+### Benefits of Tree of Thoughts
+
+- **Systematic Exploration**: Enables systematic exploration of multiple reasoning paths
+- **Strategic Lookahead**: Allows the model to plan several steps ahead
+- **Backtracking Capability**: Can revisit and revise previous thoughts
+- **Collaborative Problem Solving**: Multiple expert perspectives improve solution quality
+- **Error Correction**: Built-in mechanisms for recognizing and correcting mistakes
+
+### Practical Implementation
+
+The Tree of Thoughts algorithm has been implemented as a plug-and-play Python library that can significantly advance model reasoning by up to 70%. Here's how to use it:
+
+#### Installation
+
+```bash
+pip3 install -U tree-of-thoughts
+```
+
+#### Environment Setup
+
+Create a `.env` file with the following variables:
+
+```env
+WORKSPACE_DIR="artifacts"
+OPENAI_API_KEY="your_openai_api_key"
+```
+
+#### Basic Implementation Example
+
+```python
+from tree_of_thoughts import TotAgent, ToTDFSAgent
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Create an instance of the TotAgent class
+tot_agent = TotAgent(use_openai_caller=False)  # Use openai caller
+
+# Create an instance of the ToTDFSAgent class with specified parameters
+dfs_agent = ToTDFSAgent(
+    agent=tot_agent,  # Use the TotAgent instance as the agent for the DFS algorithm
+    threshold=0.8,  # Set the threshold for evaluating the quality of thoughts
+    max_loops=1,  # Set the maximum number of loops for the DFS algorithm
+    prune_threshold=0.5,  # Branches with evaluation < 0.5 will be pruned
+    number_of_agents=4,  # Set the number of agents to be used in the DFS algorithm
+)
+
+# Define the initial state for the DFS algorithm
+initial_state = """
+Your task: is to use 4 numbers and basic arithmetic operations (+-*/) to obtain 24 in 1 equation, return only the math
+"""
+
+# Run the DFS algorithm to solve the problem and obtain the final thought
+final_thought = dfs_agent.run(initial_state)
+
+# Print the final thought in JSON format for easy reading
+print(final_thought)
+```
+
+#### Key Parameters Explained
+
+- **`threshold`**: Quality threshold for evaluating thoughts (0.8 = high quality required)
+- **`max_loops`**: Maximum number of iterations for the DFS algorithm
+- **`prune_threshold`**: Branches with evaluation below this value are pruned (0.5 = moderate pruning)
+- **`number_of_agents`**: Number of parallel agents working on the problem
+
+#### Advanced Usage
+
+The library supports multiple search algorithms:
+
+```python
+# Depth-First Search (DFS) - as shown above
+dfs_agent = ToTDFSAgent(...)
+
+# Breadth-First Search (BFS) - for exploring wide before deep
+# bfs_agent = ToTBFSAgent(...)
+
+# Monte Carlo Search - for probabilistic exploration
+# mc_agent = ToTMonteCarloAgent(...)
+```
+
+#### Example Problem: Game of 24
+
+The classic Game of 24 is a perfect demonstration of Tree of Thoughts:
+
+**Problem**: Use four numbers and basic arithmetic operations to make 24.
+
+**Example Input**: `[4, 5, 6, 7]`
+
+**Tree of Thoughts Process**:
+1. **Generate Thoughts**: Create multiple possible intermediate equations
+2. **Evaluate Thoughts**: Rate each thought as "sure/maybe/impossible"
+3. **Prune Branches**: Remove impossible paths
+4. **Explore Promising Paths**: Continue with "maybe" and "sure" paths
+5. **Backtrack if Needed**: Return to previous nodes if current path fails
+
+**Result**: The algorithm systematically explores the solution space and finds valid equations like `(7-5) * (6+4) = 24`.
+
+### Integration with Existing Workflows
+
+The Tree of Thoughts library can be integrated into existing AI workflows:
+
+- **Research Applications**: For complex reasoning tasks in academic research
+- **Business Intelligence**: For strategic planning and decision-making
+- **Creative Problem Solving**: For generating innovative solutions
+- **Educational Tools**: For teaching advanced reasoning skills
+
+### Performance Benefits
+
+According to the [GitHub repository](https://github.com/kyegomez/tree-of-thoughts), this implementation can:
+
+- **Elevate model reasoning by up to 70%**
+- **Handle complex multi-step problems**
+- **Provide systematic exploration of solution spaces**
+- **Enable backtracking and error correction**
+- **Support multiple search strategies (DFS, BFS, Monte Carlo)**
+
+## ReAct (Reasoning + Acting)
+
+ReAct is a prompting and agent framework that enables Large Language Models (LLMs) to interleave reasoning steps ("Thoughts") with actions ("Actions"), observe results, and continue iteratively until a final answer is reached. It combines Chain of Thought prompting with tool use, allowing models to interact with external environments like APIs, search engines, or calculators.
+
+### Background
+
+ReAct was introduced in the 2022 paper "ReAct: Synergizing Reasoning and Acting in Language Models" by researchers at Princeton and Google.
+
+### Core Structure
+
+The ReAct framework follows this iterative pattern:
+
+```
+Question: [user question]
+
+Thought: [model reasons about what to do]
+Action: [tool or function call]
+Observation: [tool's response]
+Thought: [reason again]
+...
+Final Answer: [result]
+```
+
+### Example 1: Search + Reasoning
+
+**Task**: "What is the capital of the country where the Great Wall is located?"
+
+**ReAct Process**:
+```
+Question: What is the capital of the country where the Great Wall is located?
+
+Thought: The Great Wall is located in China.
+Action: lookup("capital of China")
+Observation: The capital of China is Beijing.
+Thought: So, the answer must be Beijing.
+Final Answer: Beijing
+```
+
+### Example 2: Math with Tool Use
+
+**Task**: "What is 37 multiplied by 19?"
+
+**ReAct Process**:
+```
+Question: What is 37 multiplied by 19?
+
+Thought: This is a multiplication task. I can use a calculator tool.
+Action: calculator(37 * 19)
+Observation: 703
+Thought: The product is 703.
+Final Answer: 703
+```
+
+### When to Use ReAct
+
+ReAct is particularly effective when:
+
+- **External Knowledge Required**: Your task needs both reasoning and external knowledge/tools
+- **Multi-Step Problems**: For problems that benefit from intermediate checking or correction
+- **Interactive Systems**: Ideal for building LLM agents or interactive assistants
+- **Tool Integration**: When you need to combine reasoning with API calls, searches, or calculations
+
+### Related Techniques
+
+ReAct builds upon and relates to several other prompting techniques:
+
+- **Chain of Thought (CoT)**: The reasoning component of ReAct
+- **Toolformer**: Similar tool integration approach
+- **AutoGPT / LangChain Agents**: Broader agent frameworks
+- **OpenAI Function Calling**: Modern implementation of tool use
+
+Would you like a printable version of this or a markdown snippet for your personal notes?
+Is this conversation helpful so far?
